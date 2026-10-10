@@ -76,3 +76,45 @@ def test_upload_route_processes_csv_and_removes_temporary_upload(tmp_path, monke
     assert list(clean_app.UPLOAD_FOLDER.iterdir()) == []
     assert len(list(clean_app.CLEANED_FOLDER.glob("cleaned_*.csv"))) == 1
     assert len(list(clean_app.REPORT_FOLDER.glob("report_*.txt"))) == 1
+
+
+def test_upload_route_rejects_invalid_cleaning_options():
+    import io
+
+    response = app.test_client().post(
+        "/clean",
+        data={
+            "file": (io.BytesIO(b"x\\n1\\n2\\n"), "values.csv"),
+            "missing_action": "execute",
+        },
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 400
+
+
+def test_upload_route_rejects_malformed_csv():
+    import io
+
+    response = app.test_client().post(
+        "/clean",
+        data={"file": (io.BytesIO(b'"unterminated\\nvalue'), "broken.csv")},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 400
+
+
+def test_upload_route_enforces_request_size_limit():
+    import io
+
+    client = app.test_client()
+    previous_limit = app.config["MAX_CONTENT_LENGTH"]
+    app.config["MAX_CONTENT_LENGTH"] = 128
+    try:
+        response = client.post(
+            "/clean",
+            data={"file": (io.BytesIO(b"x" * 512), "large.csv")},
+            content_type="multipart/form-data",
+        )
+    finally:
+        app.config["MAX_CONTENT_LENGTH"] = previous_limit
+    assert response.status_code == 413
