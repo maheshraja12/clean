@@ -43,3 +43,36 @@ def test_upload_route_rejects_non_csv():
     client = app.test_client()
     response = client.post("/clean", data={"file": ( __import__("io").BytesIO(b"x"), "payload.txt")})
     assert response.status_code == 400
+
+
+def test_upload_route_requires_file():
+    response = app.test_client().post("/clean", data={})
+    assert response.status_code == 400
+
+
+def test_download_routes_reject_path_traversal():
+    client = app.test_client()
+    assert client.get("/download/../app.py").status_code == 404
+    assert client.get("/report/../app.py").status_code == 404
+
+
+def test_upload_route_processes_csv_and_removes_temporary_upload(tmp_path, monkeypatch):
+    import io
+    import app as clean_app
+
+    monkeypatch.setattr(clean_app, "UPLOAD_FOLDER", tmp_path / "uploads")
+    monkeypatch.setattr(clean_app, "CLEANED_FOLDER", tmp_path / "cleaned")
+    monkeypatch.setattr(clean_app, "REPORT_FOLDER", tmp_path / "reports")
+    for folder in (clean_app.UPLOAD_FOLDER, clean_app.CLEANED_FOLDER, clean_app.REPORT_FOLDER):
+        folder.mkdir(parents=True, exist_ok=True)
+
+    response = app.test_client().post(
+        "/clean",
+        data={"file": (io.BytesIO(b"name,score\\nAda,10\\nAda,10\\nLin,20\\n"), "scores.csv")},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 200
+    assert b"Download cleaned CSV" in response.data
+    assert list(clean_app.UPLOAD_FOLDER.iterdir()) == []
+    assert len(list(clean_app.CLEANED_FOLDER.glob("cleaned_*.csv"))) == 1
+    assert len(list(clean_app.REPORT_FOLDER.glob("report_*.txt"))) == 1
