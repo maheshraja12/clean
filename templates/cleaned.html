@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CleanSweep — Results</title>
+  <style>
+    body { margin: 0; background: #f4f7fb; color: #172033; font: 16px/1.5 system-ui, sans-serif; }
+    main { max-width: 760px; margin: 7vh auto; padding: 28px; }
+    section { background: white; border: 1px solid #e1e7f0; border-radius: 18px; padding: 28px; }
+    a { display: inline-block; margin: 12px 12px 0 0; padding: 11px 15px; border-radius: 9px; background: #175cd3; color: white; text-decoration: none; font-weight: 650; }
+    .secondary { background: #334155; }
+    li { margin: 7px 0; }
+  </style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>CSV cleaning complete</h1>
+    <p>Your cleaned dataset and processing report are ready.</p>
+    <a href="{{ url_for('download', filename=filename) }}">Download cleaned CSV</a>
+    <a class="secondary" href="{{ url_for('download_report', filename=report) }}">Download report</a>
+    <p><a class="secondary" href="{{ url_for('index') }}">Clean another file</a></p>
+  </section>
+</main>
+</body>
+</html>
