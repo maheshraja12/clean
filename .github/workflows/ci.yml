@@ -33,3 +33,30 @@ jobs:
 
       - name: Build container image
         run: docker build --tag cleansweep:test .
+
+      - name: Smoke test production container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --detach --name cleansweep-ci \
+            --publish 10000:10000 \
+            --env PORT=10000 \
+            --env CLEAN_SWEEP_ENV=production \
+            --env CLEAN_SWEEP_USERNAME=operator \
+            --env CLEAN_SWEEP_PASSWORD=ci-test-password \
+            --env CLEAN_SWEEP_DATA_DIR=/var/data \
+            cleansweep:test
+          trap 'docker rm --force cleansweep-ci >/dev/null 2>&1 || true' EXIT
+          ready=0
+          for _ in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:10000/health >/dev/null; then ready=1; break; fi
+            sleep 2
+          done
+          test "$ready" = "1"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:10000/)" = "401"
+          test "$(curl --silent --user operator:ci-test-password --output /dev/null --write-out '%{http_code}' http://127.0.0.1:10000/)" = "200"
+          printf 'name,score\nAda,10\nLin,20\n' > /tmp/cleansweep-sample.csv
+          curl --fail --silent --user operator:ci-test-password \
+            --form 'file=@/tmp/cleansweep-sample.csv' \
+            http://127.0.0.1:10000/clean > /tmp/cleansweep-result.html
+          grep -q 'Download cleaned CSV' /tmp/cleansweep-result.html
