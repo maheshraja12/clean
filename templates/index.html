@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CleanSweep — CSV Cleaner</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #f4f7fb; color: #172033; }
+    main { max-width: 760px; margin: 7vh auto; padding: 28px; }
+    .card { background: white; border: 1px solid #e1e7f0; border-radius: 18px; padding: 28px; box-shadow: 0 12px 35px #1720330c; }
+    h1 { margin-top: 0; } p { color: #526078; line-height: 1.55; }
+    label { display: block; margin: 18px 0 7px; font-weight: 650; }
+    input, select, button { font: inherit; }
+    input[type=file], select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; background: white; box-sizing: border-box; }
+    .check { display: flex; align-items: center; gap: 9px; font-weight: 500; }
+    button { margin-top: 22px; padding: 12px 18px; border: 0; border-radius: 9px; background: #175cd3; color: white; font-weight: 700; cursor: pointer; }
+    small { color: #64748b; }
+  </style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <h1>CleanSweep</h1>
+    <p>Clean a CSV dataset by removing duplicates, handling missing values, optionally filtering outliers, and scaling numeric columns.</p>
+    <form action="/clean" method="post" enctype="multipart/form-data">
+      <label for="file">CSV file (maximum 16 MB)</label>
+      <input id="file" name="file" type="file" accept=".csv,text/csv" required>
+      <label for="missing_action">Missing values</label>
+      <select id="missing_action" name="missing_action">
+        <option value="ffill">Forward fill, then backward fill</option>
+        <option value="mean">Numeric mean / categorical mode</option>
+        <option value="drop">Drop rows with missing values</option>
+      </select>
+      <label class="check"><input type="checkbox" name="remove_outliers"> Remove IQR outlier rows</label>
+      <label for="scaling">Scale numeric columns (optional)</label>
+      <select id="scaling" name="scaling">
+        <option value="">No scaling</option>
+        <option value="minmax">Min-max scaling</option>
+        <option value="standard">Standard scaling (z-score)</option>
+      </select>
+      <button type="submit">Clean CSV</button>
+    </form>
+    <p><small>Only upload data you are authorized to process. Avoid sensitive personal information.</small></p>
+  </section>
+</main>
+</body>
+</html>
