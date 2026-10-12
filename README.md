@@ -6,7 +6,8 @@ CleanSweep is a Flask web app for cleaning CSV datasets.
 - Remove duplicate rows.
 - Handle missing values by dropping rows, filling numeric values with means and categorical values with modes, or forward/backward filling.
 - Optionally remove IQR outliers and scale numeric columns.
-- Upload validation, a 16 MB request limit, unique temporary/output names, and guarded download routes.
+- Upload validation, a 16 MB request limit, 100,000-row / 100-column dataset limits, unique temporary/output names, and guarded download routes.
+- A quality summary covering input dimensions, missing cells, duplicate rows removed, remaining missing cells, and output dimensions.
 
 ## Run locally
 Requires Python 3.10+.
@@ -28,4 +29,4 @@ pytest -q
 ```
 
 ## Security notes
-Do not expose this app publicly without adding authentication, rate limiting, a retention policy for generated files, and deployment-specific configuration. Uploaded CSV contents may contain sensitive data; only use trusted data and remove generated files when no longer needed.
+Do not expose this app publicly without adding authentication, rate limiting, a retention policy for generated files, and deployment-specific configuration. The app reads CSVs into memory and intentionally caps input at 100,000 data rows, 100 columns, and 16 MB; tune these limits only after load testing. Uploaded CSV contents may contain sensitive data; only use trusted data and remove generated files when no longer needed.
