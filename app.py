@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import os
 import hmac
+import time
 import uuid
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from flask import Flask, abort, jsonify, render_template, request, send_from_directory
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from werkzeug.utils import secure_filename
 
@@ -28,6 +31,23 @@ for folder in (UPLOAD_FOLDER, CLEANED_FOLDER, REPORT_FOLDER):
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 app.config["MAX_FORM_MEMORY_SIZE"] = 64 * 1024
+limiter = Limiter(get_remote_address, app=app, storage_uri=os.getenv("RATELIMIT_STORAGE_URI", "memory://"))
+RETENTION_SECONDS = max(3600, int(os.getenv("CLEAN_SWEEP_RETENTION_HOURS", "24")) * 3600)
+
+
+def cleanup_expired_artifacts() -> None:
+    """Best-effort cleanup of old output/report files; never fail a request."""
+    cutoff = time.time() - RETENTION_SECONDS
+    for folder in (CLEANED_FOLDER, REPORT_FOLDER, UPLOAD_FOLDER):
+        try:
+            for path in folder.iterdir():
+                try:
+                    if path.is_file() and path.stat().st_mtime < cutoff:
+                        path.unlink(missing_ok=True)
+                except OSError:
+                    app.logger.warning("Could not remove expired artifact: %s", path.name)
+        except OSError:
+            app.logger.warning("Could not inspect artifact folder: %s", folder.name)
 
 
 @app.before_request
@@ -52,6 +72,7 @@ def require_configured_deployment_auth():
             response = app.response_class("Authentication required.", 401)
             response.headers["WWW-Authenticate"] = 'Basic realm="CleanSweep"'
             return response
+    cleanup_expired_artifacts()
     return None
 
 
@@ -159,6 +180,7 @@ def index():
 
 
 @app.route("/clean", methods=["POST"])
+@limiter.limit("10 per hour")
 def clean():
     uploaded = request.files.get("file")
     if uploaded is None or not uploaded.filename:
