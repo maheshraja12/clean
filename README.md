@@ -28,5 +28,37 @@ pip install pytest
 pytest -q
 ```
 
-## Security notes
-Do not expose this app publicly without adding authentication, rate limiting, a retention policy for generated files, and deployment-specific configuration. The app reads CSVs into memory and intentionally caps input at 100,000 data rows, 100 columns, and 16 MB; tune these limits only after load testing. Uploaded CSV contents may contain sensitive data; only use trusted data and remove generated files when no longer needed.
+## Container deployment
+
+The repository includes a non-root Docker image and a Render Blueprint. The blueprint provisions a persistent disk because cleaned files and reports must remain available for download across requests.
+
+### Local container smoke test
+
+```bash
+docker build -t cleansweep .
+docker run --rm -p 10000:10000 \
+  -e CLEAN_SWEEP_ENV=production \
+  -e CLEAN_SWEEP_USERNAME=demo-user \
+  -e CLEAN_SWEEP_PASSWORD='replace-with-a-long-random-password' \
+  -e CLEAN_SWEEP_DATA_DIR=/var/data \
+  -v cleansweep-data:/var/data \
+  cleansweep
+```
+
+Check `http://127.0.0.1:10000/health`. The health endpoint intentionally does not require login; all other routes require configured credentials in production. Do not use the example credentials in a public environment.
+
+### Render deployment
+
+1. Review `render.yaml` and connect this repository to Render.
+2. Set unique values for `CLEAN_SWEEP_USERNAME` and `CLEAN_SWEEP_PASSWORD` in the service's secret environment settings.
+3. Deploy the service and wait for the `/health` check to pass.
+4. Test login, CSV upload, output download, report download, invalid files, and the 16 MB / row / column limits on the deployed URL.
+
+The blueprint requests a paid Starter service and a 1 GB persistent disk; review current pricing in Render before creating the service. This repository configuration does **not** mean the app is already deployed.
+
+## Security and operational limitations
+
+- Production requests fail closed with HTTP 503 until both login variables are configured. When configured, HTTP Basic authentication protects the web UI and downloads; always use HTTPS and a long unique password.
+- Rate limiting and automated retention/expiry of generated CSVs and reports are still required before a broader public launch. Treat uploaded data as sensitive and delete generated files when no longer needed.
+- The app reads CSVs into memory and caps input at 100,000 data rows, 100 columns, and 16 MB. Validate these limits under realistic load before raising them.
+- The persistent disk stores uploaded results; define a retention policy and monitor disk usage before accepting real users.
