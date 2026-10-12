@@ -1,5 +1,7 @@
 # CleanSweep
 
+[![CleanSweep CI](https://github.com/maheshraja12/clean/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/maheshraja12/clean/actions/workflows/ci.yml)
+
 CleanSweep is a Flask web app for cleaning CSV datasets.
 
 ## Features
