@@ -59,6 +59,6 @@ The blueprint requests a paid Starter service and a 1 GB persistent disk; review
 ## Security and operational limitations
 
 - Production requests fail closed with HTTP 503 until both login variables are configured. When configured, HTTP Basic authentication protects the web UI and downloads; always use HTTPS and a long unique password.
-- Rate limiting and automated retention/expiry of generated CSVs and reports are still required before a broader public launch. Treat uploaded data as sensitive and delete generated files when no longer needed.
+- Uploads are limited to 10 per hour per client IP and generated files are removed after the configured retention period (default 24 hours) when subsequent requests trigger cleanup. The default rate-limit store is in-memory and suitable only for a single app process; configure `RATELIMIT_STORAGE_URI` to a shared Redis service before scaling. Treat uploaded data as sensitive and define an explicit retention policy for your users.
 - The app reads CSVs into memory and caps input at 100,000 data rows, 100 columns, and 16 MB. Validate these limits under realistic load before raising them.
 - The persistent disk stores uploaded results; define a retention policy and monitor disk usage before accepting real users.
