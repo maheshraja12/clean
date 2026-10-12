@@ -188,3 +188,34 @@ def test_upload_route_enforces_dataset_column_limit(monkeypatch, tmp_path):
     )
     assert response.status_code == 400
     assert b"maximum supported is 2" in response.data
+
+
+
+def test_health_endpoint_returns_minimal_status():
+    response = app.test_client().get("/health")
+    assert response.status_code == 200
+    assert response.get_json() == {"status": "ok"}
+
+
+def test_production_fails_closed_without_credentials(monkeypatch):
+    monkeypatch.setenv("CLEAN_SWEEP_ENV", "production")
+    monkeypatch.delenv("CLEAN_SWEEP_USERNAME", raising=False)
+    monkeypatch.delenv("CLEAN_SWEEP_PASSWORD", raising=False)
+
+    client = app.test_client()
+    assert client.get("/health").status_code == 200
+    response = client.get("/")
+    assert response.status_code == 503
+    assert b"Production access is disabled" in response.data
+
+
+def test_configured_credentials_protect_routes(monkeypatch):
+    monkeypatch.setenv("CLEAN_SWEEP_ENV", "production")
+    monkeypatch.setenv("CLEAN_SWEEP_USERNAME", "test-user")
+    monkeypatch.setenv("CLEAN_SWEEP_PASSWORD", "test-password")
+
+    client = app.test_client()
+    assert client.get("/health").status_code == 200
+    assert client.get("/").status_code == 401
+    response = client.get("/", headers={"Authorization": "Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ="})
+    assert response.status_code == 200
