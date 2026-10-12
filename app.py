@@ -17,6 +17,8 @@ CLEANED_FOLDER = BASE_DIR / "cleaned"
 REPORT_FOLDER = BASE_DIR / "reports"
 ALLOWED_EXTENSIONS = {".csv"}
 MAX_UPLOAD_BYTES = 16 * 1024 * 1024
+MAX_ROWS = 100_000
+MAX_COLUMNS = 100
 
 for folder in (UPLOAD_FOLDER, CLEANED_FOLDER, REPORT_FOLDER):
     folder.mkdir(parents=True, exist_ok=True)
@@ -71,10 +73,14 @@ def clean_dataframe(
         raise ValueError("Unsupported missing-value action.")
 
     result = df.copy()
-    report: list[str] = []
+    report: list[str] = [
+        f"Input dataset: {len(df)} rows and {len(df.columns)} columns.",
+        f"Input missing cells: {int(df.isna().sum().sum())}.",
+    ]
     before = len(result)
     result = result.drop_duplicates()
-    report.append(f"Removed {before - len(result)} duplicate rows.")
+    duplicate_count = before - len(result)
+    report.append(f"Removed {duplicate_count} duplicate rows.")
 
     if missing_action == "drop":
         before = len(result)
@@ -103,6 +109,7 @@ def clean_dataframe(
         result = scale_data(result, scaling_method)
         report.append(f"Applied {scaling_method} scaling to numeric columns.")
 
+    report.append(f"Remaining missing cells: {int(result.isna().sum().sum())}.")
     report.append(f"Output contains {len(result)} rows and {len(result.columns)} columns.")
     return result, report
 
@@ -133,8 +140,14 @@ def clean():
 
     try:
         uploaded.save(upload_path)
-        df = pd.read_csv(upload_path)
-        if df.empty and len(df.columns) == 0:
+        # Inspect the header first and cap rows read into memory to avoid oversized datasets.
+        header = pd.read_csv(upload_path, nrows=0)
+        if len(header.columns) > MAX_COLUMNS:
+            return f"CSV has {len(header.columns)} columns; maximum supported is {MAX_COLUMNS}.", 400
+        df = pd.read_csv(upload_path, nrows=MAX_ROWS + 1)
+        if len(df) > MAX_ROWS:
+            return f"CSV exceeds the maximum supported size of {MAX_ROWS:,} data rows.", 400
+        if len(df.columns) == 0:
             return "The CSV file does not contain any columns.", 400
 
         missing_action = request.form.get("missing_action", "ffill")
@@ -150,7 +163,7 @@ def clean():
         )
         cleaned_df.to_csv(CLEANED_FOLDER / output_name, index=False)
         (REPORT_FOLDER / report_name).write_text("\n".join(report), encoding="utf-8")
-    except (pd.errors.ParserError, UnicodeDecodeError, ValueError) as exc:
+    except (pd.errors.EmptyDataError, pd.errors.ParserError, UnicodeDecodeError, ValueError) as exc:
         return f"Could not process this CSV: {exc}", 400
     except OSError:
         app.logger.exception("File operation failed")
@@ -161,7 +174,7 @@ def clean():
         except OSError:
             app.logger.warning("Could not remove temporary upload file")
 
-    return render_template("cleaned.html", filename=output_name, report=report_name)
+    return render_template("cleaned.html", filename=output_name, report=report_name, report_lines=report)
 
 
 @app.route("/download/<path:filename>")
