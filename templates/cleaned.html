@@ -20,6 +20,10 @@
     <p>Your cleaned dataset and processing report are ready.</p>
     <a href="{{ url_for('download', filename=filename) }}">Download cleaned CSV</a>
     <a class="secondary" href="{{ url_for('download_report', filename=report) }}">Download report</a>
+    <h2>Data quality summary</h2>
+    <ul>
+      {% for line in report_lines %}<li>{{ line }}</li>{% endfor %}
+    </ul>
     <p><a class="secondary" href="{{ url_for('index') }}">Clean another file</a></p>
   </section>
 </main>
