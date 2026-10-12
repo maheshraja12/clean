@@ -118,3 +118,73 @@ def test_upload_route_enforces_request_size_limit():
     finally:
         app.config["MAX_CONTENT_LENGTH"] = previous_limit
     assert response.status_code == 413
+
+
+
+def test_clean_dataframe_report_includes_quality_metrics():
+    df = pd.DataFrame({"name": ["Ada", "Ada", "Lin"], "score": [10.0, 10.0, None]})
+    cleaned, report = clean_dataframe(df, missing_action="mean")
+
+    assert any("Input dataset: 3 rows and 2 columns." in line for line in report)
+    assert any("Input missing cells: 1." in line for line in report)
+    assert any("Removed 1 duplicate rows." in line for line in report)
+    assert any("Remaining missing cells: 0." in line for line in report)
+    assert len(cleaned) == 2
+
+
+def test_upload_route_rejects_empty_csv(tmp_path, monkeypatch):
+    import io
+    import app as clean_app
+
+    monkeypatch.setattr(clean_app, "UPLOAD_FOLDER", tmp_path / "uploads")
+    monkeypatch.setattr(clean_app, "CLEANED_FOLDER", tmp_path / "cleaned")
+    monkeypatch.setattr(clean_app, "REPORT_FOLDER", tmp_path / "reports")
+    for folder in (clean_app.UPLOAD_FOLDER, clean_app.CLEANED_FOLDER, clean_app.REPORT_FOLDER):
+        folder.mkdir(parents=True, exist_ok=True)
+
+    response = app.test_client().post(
+        "/clean",
+        data={"file": (io.BytesIO(b""), "empty.csv")},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 400
+
+
+def test_upload_route_enforces_dataset_row_limit(monkeypatch, tmp_path):
+    import io
+    import app as clean_app
+
+    monkeypatch.setattr(clean_app, "MAX_ROWS", 2)
+    monkeypatch.setattr(clean_app, "UPLOAD_FOLDER", tmp_path / "uploads")
+    monkeypatch.setattr(clean_app, "CLEANED_FOLDER", tmp_path / "cleaned")
+    monkeypatch.setattr(clean_app, "REPORT_FOLDER", tmp_path / "reports")
+    for folder in (clean_app.UPLOAD_FOLDER, clean_app.CLEANED_FOLDER, clean_app.REPORT_FOLDER):
+        folder.mkdir(parents=True, exist_ok=True)
+
+    response = app.test_client().post(
+        "/clean",
+        data={"file": (io.BytesIO(b"name\\nAda\\nLin\\nGrace\\n"), "large_rows.csv")},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 400
+    assert b"maximum supported size" in response.data
+
+
+def test_upload_route_enforces_dataset_column_limit(monkeypatch, tmp_path):
+    import io
+    import app as clean_app
+
+    monkeypatch.setattr(clean_app, "MAX_COLUMNS", 2)
+    monkeypatch.setattr(clean_app, "UPLOAD_FOLDER", tmp_path / "uploads")
+    monkeypatch.setattr(clean_app, "CLEANED_FOLDER", tmp_path / "cleaned")
+    monkeypatch.setattr(clean_app, "REPORT_FOLDER", tmp_path / "reports")
+    for folder in (clean_app.UPLOAD_FOLDER, clean_app.CLEANED_FOLDER, clean_app.REPORT_FOLDER):
+        folder.mkdir(parents=True, exist_ok=True)
+
+    response = app.test_client().post(
+        "/clean",
+        data={"file": (io.BytesIO(b"a,b,c\\n1,2,3\\n"), "wide.csv")},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 400
+    assert b"maximum supported is 2" in response.data
