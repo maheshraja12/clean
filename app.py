@@ -2,19 +2,21 @@
 from __future__ import annotations
 
 import os
+import hmac
 import uuid
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from flask import Flask, abort, render_template, request, send_from_directory
+from flask import Flask, abort, jsonify, render_template, request, send_from_directory
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from werkzeug.utils import secure_filename
 
 BASE_DIR = Path(__file__).resolve().parent
-UPLOAD_FOLDER = BASE_DIR / "uploads"
-CLEANED_FOLDER = BASE_DIR / "cleaned"
-REPORT_FOLDER = BASE_DIR / "reports"
+DATA_DIR = Path(os.getenv("CLEAN_SWEEP_DATA_DIR", str(BASE_DIR))).resolve()
+UPLOAD_FOLDER = DATA_DIR / "uploads"
+CLEANED_FOLDER = DATA_DIR / "cleaned"
+REPORT_FOLDER = DATA_DIR / "reports"
 ALLOWED_EXTENSIONS = {".csv"}
 MAX_UPLOAD_BYTES = 16 * 1024 * 1024
 MAX_ROWS = 100_000
@@ -25,6 +27,38 @@ for folder in (UPLOAD_FOLDER, CLEANED_FOLDER, REPORT_FOLDER):
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
+app.config["MAX_FORM_MEMORY_SIZE"] = 64 * 1024
+
+
+@app.before_request
+def require_configured_deployment_auth():
+    """Fail closed in production and optionally protect every non-health route."""
+    if request.endpoint == "health":
+        return None
+
+    production = os.getenv("CLEAN_SWEEP_ENV", "development").strip().lower() == "production"
+    expected_user = os.getenv("CLEAN_SWEEP_USERNAME", "")
+    expected_password = os.getenv("CLEAN_SWEEP_PASSWORD", "")
+    if production and (not expected_user or not expected_password):
+        return "Production access is disabled until CLEAN_SWEEP_USERNAME and CLEAN_SWEEP_PASSWORD are configured.", 503
+
+    if expected_user or expected_password:
+        auth = request.authorization
+        username = auth.username if auth else ""
+        password = auth.password if auth else ""
+        user_ok = bool(expected_user) and hmac.compare_digest(username, expected_user)
+        password_ok = bool(expected_password) and hmac.compare_digest(password, expected_password)
+        if not (user_ok and password_ok):
+            response = app.response_class("Authentication required.", 401)
+            response.headers["WWW-Authenticate"] = 'Basic realm="CleanSweep"'
+            return response
+    return None
+
+
+@app.get("/health")
+def health():
+    """Minimal health endpoint that does not expose environment or user data."""
+    return jsonify({"status": "ok"}), 200
 
 
 def allowed_file(filename: str) -> bool:
