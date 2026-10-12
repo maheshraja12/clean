@@ -68,7 +68,7 @@ def test_upload_route_processes_csv_and_removes_temporary_upload(tmp_path, monke
 
     response = app.test_client().post(
         "/clean",
-        data={"file": (io.BytesIO(b"name,score\\nAda,10\\nAda,10\\nLin,20\\n"), "scores.csv")},
+        data={"file": (io.BytesIO(b"name,score\nAda,10\nAda,10\nLin,20\n"), "scores.csv")},
         content_type="multipart/form-data",
     )
     assert response.status_code == 200
@@ -84,7 +84,7 @@ def test_upload_route_rejects_invalid_cleaning_options():
     response = app.test_client().post(
         "/clean",
         data={
-            "file": (io.BytesIO(b"x\\n1\\n2\\n"), "values.csv"),
+            "file": (io.BytesIO(b"x\n1\n2\n"), "values.csv"),
             "missing_action": "execute",
         },
         content_type="multipart/form-data",
@@ -97,7 +97,7 @@ def test_upload_route_rejects_malformed_csv():
 
     response = app.test_client().post(
         "/clean",
-        data={"file": (io.BytesIO(b'"unterminated\\nvalue'), "broken.csv")},
+        data={"file": (io.BytesIO(b'"unterminated\nvalue'), "broken.csv")},
         content_type="multipart/form-data",
     )
     assert response.status_code == 400
@@ -163,7 +163,7 @@ def test_upload_route_enforces_dataset_row_limit(monkeypatch, tmp_path):
 
     response = app.test_client().post(
         "/clean",
-        data={"file": (io.BytesIO(b"name\\nAda\\nLin\\nGrace\\n"), "large_rows.csv")},
+        data={"file": (io.BytesIO(b"name\nAda\nLin\nGrace\n"), "large_rows.csv")},
         content_type="multipart/form-data",
     )
     assert response.status_code == 400
@@ -183,7 +183,7 @@ def test_upload_route_enforces_dataset_column_limit(monkeypatch, tmp_path):
 
     response = app.test_client().post(
         "/clean",
-        data={"file": (io.BytesIO(b"a,b,c\\n1,2,3\\n"), "wide.csv")},
+        data={"file": (io.BytesIO(b"a,b,c\n1,2,3\n"), "wide.csv")},
         content_type="multipart/form-data",
     )
     assert response.status_code == 400
