@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: cleansweep
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    disk:
+      name: cleansweep-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: CLEAN_SWEEP_ENV
+        value: production
+      - key: CLEAN_SWEEP_DATA_DIR
+        value: /var/data
+      - key: CLEAN_SWEEP_USERNAME
+        sync: false
+      - key: CLEAN_SWEEP_PASSWORD
+        sync: false
