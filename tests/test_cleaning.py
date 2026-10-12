@@ -219,3 +219,57 @@ def test_configured_credentials_protect_routes(monkeypatch):
     assert client.get("/").status_code == 401
     response = client.get("/", headers={"Authorization": "Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ="})
     assert response.status_code == 200
+
+
+
+def test_cleanup_removes_expired_artifacts_but_keeps_recent_files(tmp_path, monkeypatch):
+    import os
+    import time
+    import app as clean_app
+
+    upload = tmp_path / "uploads"
+    cleaned = tmp_path / "cleaned"
+    reports = tmp_path / "reports"
+    for folder in (upload, cleaned, reports):
+        folder.mkdir()
+    old_file = cleaned / "cleaned_old.csv"
+    new_file = reports / "report_new.txt"
+    old_file.write_text("old", encoding="utf-8")
+    new_file.write_text("new", encoding="utf-8")
+    os.utime(old_file, (time.time() - clean_app.RETENTION_SECONDS - 60,) * 2)
+
+    monkeypatch.setattr(clean_app, "UPLOAD_FOLDER", upload)
+    monkeypatch.setattr(clean_app, "CLEANED_FOLDER", cleaned)
+    monkeypatch.setattr(clean_app, "REPORT_FOLDER", reports)
+    clean_app.cleanup_expired_artifacts()
+
+    assert not old_file.exists()
+    assert new_file.exists()
+
+
+def test_upload_rate_limit_returns_429_after_ten_requests(monkeypatch, tmp_path):
+    import io
+    import app as clean_app
+
+    monkeypatch.delenv("CLEAN_SWEEP_ENV", raising=False)
+    monkeypatch.delenv("CLEAN_SWEEP_USERNAME", raising=False)
+    monkeypatch.delenv("CLEAN_SWEEP_PASSWORD", raising=False)
+    monkeypatch.setattr(clean_app, "UPLOAD_FOLDER", tmp_path / "uploads")
+    monkeypatch.setattr(clean_app, "CLEANED_FOLDER", tmp_path / "cleaned")
+    monkeypatch.setattr(clean_app, "REPORT_FOLDER", tmp_path / "reports")
+    for folder in (clean_app.UPLOAD_FOLDER, clean_app.CLEANED_FOLDER, clean_app.REPORT_FOLDER):
+        folder.mkdir(parents=True, exist_ok=True)
+
+    client = app.test_client()
+    statuses = []
+    for _ in range(11):
+        response = client.post(
+            "/clean",
+            data={"file": (io.BytesIO(b"name\nAda\nLin\n"), "values.csv")},
+            content_type="multipart/form-data",
+            environ_overrides={"REMOTE_ADDR": "198.51.100.44"},
+        )
+        statuses.append(response.status_code)
+
+    assert statuses.count(200) == 10
+    assert statuses[-1] == 429
