@@ -241,7 +241,7 @@ def test_cleanup_removes_expired_artifacts_but_keeps_recent_files(tmp_path, monk
     monkeypatch.setattr(clean_app, "UPLOAD_FOLDER", upload)
     monkeypatch.setattr(clean_app, "CLEANED_FOLDER", cleaned)
     monkeypatch.setattr(clean_app, "REPORT_FOLDER", reports)
-    clean_app.cleanup_expired_artifacts()
+    clean_app.cleanup_expired_artifacts(force=True)
 
     assert not old_file.exists()
     assert new_file.exists()
@@ -273,3 +273,17 @@ def test_upload_rate_limit_returns_429_after_ten_requests(monkeypatch, tmp_path)
 
     assert statuses.count(200) == 10
     assert statuses[-1] == 429
+
+def test_cleanup_skips_directory_scan_until_interval(monkeypatch):
+    import time
+    from pathlib import Path
+    import app as clean_app
+
+    monkeypatch.setattr(clean_app, "_last_cleanup_monotonic", time.monotonic())
+
+    def unexpected_scan(_self):
+        raise AssertionError("cleanup should not scan artifact directories on every request")
+
+    monkeypatch.setattr(Path, "iterdir", unexpected_scan)
+    clean_app.cleanup_expired_artifacts()
+\n
