@@ -286,4 +286,4 @@ def test_cleanup_skips_directory_scan_until_interval(monkeypatch):
 
     monkeypatch.setattr(Path, "iterdir", unexpected_scan)
     clean_app.cleanup_expired_artifacts()
-\n
+
