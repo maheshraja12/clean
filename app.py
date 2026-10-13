@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import hmac
 import time
+import threading
 import uuid
 from pathlib import Path
 
@@ -33,10 +34,26 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 app.config["MAX_FORM_MEMORY_SIZE"] = 64 * 1024
 limiter = Limiter(get_remote_address, app=app, storage_uri=os.getenv("RATELIMIT_STORAGE_URI", "memory://"))
 RETENTION_SECONDS = max(3600, int(os.getenv("CLEAN_SWEEP_RETENTION_HOURS", "24")) * 3600)
+CLEANUP_INTERVAL_SECONDS = max(60, int(os.getenv("CLEAN_SWEEP_CLEANUP_INTERVAL_SECONDS", "900")))
+_cleanup_lock = threading.Lock()
+_last_cleanup_monotonic = 0.0
 
 
-def cleanup_expired_artifacts() -> None:
-    """Best-effort cleanup of old output/report files; never fail a request."""
+def cleanup_expired_artifacts(force: bool = False) -> None:
+    """Best-effort, rate-limited cleanup of old artifacts; never fail a request.
+
+    Cleanup runs at most once per configured interval under normal request load,
+    avoiding a full directory scan on every request. Tests/operators may force a run.
+    """
+    global _last_cleanup_monotonic
+    now = time.monotonic()
+    if not force and now - _last_cleanup_monotonic < CLEANUP_INTERVAL_SECONDS:
+        return
+    with _cleanup_lock:
+        now = time.monotonic()
+        if not force and now - _last_cleanup_monotonic < CLEANUP_INTERVAL_SECONDS:
+            return
+        _last_cleanup_monotonic = now
     cutoff = time.time() - RETENTION_SECONDS
     for folder in (CLEANED_FOLDER, REPORT_FOLDER, UPLOAD_FOLDER):
         try:
