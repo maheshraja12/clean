@@ -17,7 +17,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from werkzeug.utils import secure_filename
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = Path(os.getenv("CLEAN_SWEEP_DATA_DIR", str(BASE_DIR))).resolve()
+DATA_DIR = Path(os.getenv("CLEAN_SWEEP_DATA_DIR", "/tmp")).resolve()
 UPLOAD_FOLDER = DATA_DIR / "uploads"
 CLEANED_FOLDER = DATA_DIR / "cleaned"
 REPORT_FOLDER = DATA_DIR / "reports"
