@@ -6,6 +6,9 @@ import app as clean_app
 
 
 def _isolated_storage(monkeypatch, tmp_path):
+    # Isolate these endpoint tests from the shared in-memory limiter state used
+    # by other test modules; rate limiting itself has dedicated regression tests.
+    monkeypatch.setitem(clean_app.app.config, "RATELIMIT_ENABLED", False)
     folders = {
         "UPLOAD_FOLDER": tmp_path / "uploads",
         "CLEANED_FOLDER": tmp_path / "cleaned",
