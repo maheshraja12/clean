@@ -31,6 +31,7 @@ def test_upload_clean_download_csv_and_report_round_trip(monkeypatch, tmp_path):
             "missing_action": "ffill",
         },
         content_type="multipart/form-data",
+        environ_overrides={"REMOTE_ADDR": "198.51.100.77"},
     )
 
     assert response.status_code == 200
@@ -80,6 +81,7 @@ def test_empty_header_only_csv_is_processed_without_crashing(monkeypatch, tmp_pa
         "/clean",
         data={"file": (io.BytesIO(b"name,score\n"), "header-only.csv")},
         content_type="multipart/form-data",
+        environ_overrides={"REMOTE_ADDR": "198.51.100.78"},
     )
 
     assert response.status_code == 200
