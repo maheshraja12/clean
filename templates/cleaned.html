@@ -3,29 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CleanSweep — Results</title>
-  <style>
-    body { margin: 0; background: #f4f7fb; color: #172033; font: 16px/1.5 system-ui, sans-serif; }
-    main { max-width: 760px; margin: 7vh auto; padding: 28px; }
-    section { background: white; border: 1px solid #e1e7f0; border-radius: 18px; padding: 28px; }
-    a { display: inline-block; margin: 12px 12px 0 0; padding: 11px 15px; border-radius: 9px; background: #175cd3; color: white; text-decoration: none; font-weight: 650; }
-    .secondary { background: #334155; }
-    li { margin: 7px 0; }
-  </style>
+  <meta name="theme-color" content="#0b1224">
+  <meta name="description" content="Your CleanSweep dataset processing results and downloads.">
+  <title>CleanSweep — Your data is ready</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cleansweep.css') }}">
 </head>
-<body>
-<main>
-  <section>
-    <h1>CSV cleaning complete</h1>
-    <p>Your cleaned dataset and processing report are ready.</p>
-    <a href="{{ url_for('download', filename=filename) }}">Download cleaned CSV</a>
-    <a class="secondary" href="{{ url_for('download_report', filename=report) }}">Download report</a>
-    <h2>Data quality summary</h2>
-    <ul>
-      {% for line in report_lines %}<li>{{ line }}</li>{% endfor %}
-    </ul>
-    <p><a class="secondary" href="{{ url_for('index') }}">Clean another file</a></p>
-  </section>
-</main>
+<body class="app-shell results-shell">
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}" aria-label="CleanSweep home">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 17.5 13.1 23 25.5 9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 2.8 19.4 6l4.7-.1 1.2 4.5 3.8 2.7-1.4 4.5 1.4 4.5-3.8 2.7-1.2 4.5-4.7-.1-3.4 3.2-3.4-3.2-4.7.1-1.2-4.5-3.8-2.7 1.4-4.5-1.4-4.5 3.8-2.7 1.2-4.5 4.7.1L16 2.8Z" stroke="currentColor" stroke-width="1.3" opacity=".55"/></svg></span>
+      <span class="brand-copy"><strong>CleanSweep</strong><small>DATA WORKSPACE</small></span>
+    </a>
+    <nav class="topnav" aria-label="Main navigation"><a class="nav-link" href="{{ url_for('index') }}">Workspace</a><a class="nav-link active" href="#results">Results</a></nav>
+    <a class="status-pill" href="{{ url_for('health') }}"><span class="status-dot"></span> System ready</a>
+  </header>
+  <main class="page-wrap results-wrap" id="results">
+    <section class="result-hero">
+      <div class="success-orb"><span>✓</span><i></i></div>
+      <div class="eyebrow"><span class="eyebrow-spark">✦</span> CLEANUP COMPLETE</div>
+      <h1>Your data is <span class="gradient-text">ready for what's next.</span></h1>
+      <p>Your cleaning process has finished. Download your cleaned CSV and keep the quality report for your records.</p>
+    </section>
+    <section class="results-grid">
+      <div class="panel downloads-panel">
+        <div class="section-kicker">YOUR OUTPUTS <span>·</span> READY TO DOWNLOAD</div>
+        <h2>Take your clean data with you.</h2>
+        <p class="panel-intro">Your files are generated with unique names to keep downloads separate.</p>
+        <a class="download-card" href="{{ url_for('download', filename=filename) }}">
+          <span class="download-file-icon green-file"><svg viewBox="0 0 32 32" fill="none"><path d="M8 3.5h10l7 7V28H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8"/><path d="M18 3.5v7h7M11 18h10M11 22h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <span class="download-info"><strong>Cleaned dataset</strong><small>CSV file · Analysis-ready data</small></span>
+          <span class="download-action">Download <b>↓</b></span>
+        </a>
+        <a class="download-card" href="{{ url_for('download_report', filename=report) }}">
+          <span class="download-file-icon purple-file"><svg viewBox="0 0 32 32" fill="none"><path d="M8 3.5h10l7 7V28H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8"/><path d="M18 3.5v7h7M11 17h10M11 21h10M11 25h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+          <span class="download-info"><strong>Cleaning report</strong><small>TXT file · Summary of changes</small></span>
+          <span class="download-action">Download <b>↓</b></span>
+        </a>
+        <div class="result-actions"><a class="primary-button inline-button" href="{{ url_for('index') }}"><span class="button-spark">✦</span> Clean another file <span class="button-arrow">→</span></a></div>
+        <p class="result-note"><span>ⓘ</span> Download your files before they expire under the configured retention policy.</p>
+      </div>
+      <aside class="panel report-panel">
+        <div class="report-heading"><span class="report-icon">▤</span><div><div class="section-kicker">PROCESSING SUMMARY</div><h2>What changed</h2></div></div>
+        <p class="report-subtitle">A transparent log of the cleaning steps applied to your dataset.</p>
+        <ol class="report-list">
+          {% for line in report_lines %}
+          <li><span class="report-check">✓</span><span>{{ line }}</span></li>
+          {% endfor %}
+        </ol>
+        <div class="report-footer"><span class="status-dot"></span> Report generated successfully</div>
+      </aside>
+    </section>
+    <section class="bottom-strip"><span class="bottom-shield">✓</span><span><strong>Keep your data secure</strong><small>Store downloaded results somewhere private and share only with authorized people.</small></span><span class="bottom-version">CLEAN DATA. CLEAR THINKING.</span></section>
+    <footer class="footer"><span>© CleanSweep · Your data, in better shape.</span><span><a href="{{ url_for('index') }}">← Back to workspace</a></span></footer>
+  </main>
 </body>
 </html>
