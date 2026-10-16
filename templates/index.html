@@ -3,46 +3,124 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CleanSweep — CSV Cleaner</title>
-  <style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; }
-    body { margin: 0; background: #f4f7fb; color: #172033; }
-    main { max-width: 760px; margin: 7vh auto; padding: 28px; }
-    .card { background: white; border: 1px solid #e1e7f0; border-radius: 18px; padding: 28px; box-shadow: 0 12px 35px #1720330c; }
-    h1 { margin-top: 0; } p { color: #526078; line-height: 1.55; }
-    label { display: block; margin: 18px 0 7px; font-weight: 650; }
-    input, select, button { font: inherit; }
-    input[type=file], select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; background: white; box-sizing: border-box; }
-    .check { display: flex; align-items: center; gap: 9px; font-weight: 500; }
-    button { margin-top: 22px; padding: 12px 18px; border: 0; border-radius: 9px; background: #175cd3; color: white; font-weight: 700; cursor: pointer; }
-    small { color: #64748b; }
-  </style>
+  <meta name="theme-color" content="#0b1224">
+  <meta name="description" content="CleanSweep helps you clean CSV datasets, handle missing values, remove duplicates and prepare analysis-ready data.">
+  <title>CleanSweep — Data, made cleaner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cleansweep.css') }}">
+  <script src="{{ url_for('static', filename='js/cleansweep.js') }}" defer></script>
 </head>
-<body>
-<main>
-  <section class="card">
-    <h1>CleanSweep</h1>
-    <p>Clean a CSV dataset by removing duplicates, handling missing values, optionally filtering outliers, and scaling numeric columns.</p>
-    <form action="/clean" method="post" enctype="multipart/form-data">
-      <label for="file">CSV file (maximum 16 MB)</label>
-      <input id="file" name="file" type="file" accept=".csv,text/csv" required>
-      <label for="missing_action">Missing values</label>
-      <select id="missing_action" name="missing_action">
-        <option value="ffill">Forward fill, then backward fill</option>
-        <option value="mean">Numeric mean / categorical mode</option>
-        <option value="drop">Drop rows with missing values</option>
-      </select>
-      <label class="check"><input type="checkbox" name="remove_outliers"> Remove IQR outlier rows</label>
-      <label for="scaling">Scale numeric columns (optional)</label>
-      <select id="scaling" name="scaling">
-        <option value="">No scaling</option>
-        <option value="minmax">Min-max scaling</option>
-        <option value="standard">Standard scaling (z-score)</option>
-      </select>
-      <button type="submit">Clean CSV</button>
-    </form>
-    <p><small>Only upload data you are authorized to process. Avoid sensitive personal information.</small></p>
-  </section>
-</main>
+<body class="app-shell">
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}" aria-label="CleanSweep home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M7 17.5 13.1 23 25.5 9" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 2.8 19.4 6l4.7-.1 1.2 4.5 3.8 2.7-1.4 4.5 1.4 4.5-3.8 2.7-1.2 4.5-4.7-.1-3.4 3.2-3.4-3.2-4.7.1-1.2-4.5-3.8-2.7 1.4-4.5-1.4-4.5 3.8-2.7 1.2-4.5 4.7.1L16 2.8Z" stroke="currentColor" stroke-width="1.3" opacity=".55"/></svg>
+      </span>
+      <span class="brand-copy"><strong>CleanSweep</strong><small>DATA WORKSPACE</small></span>
+    </a>
+    <nav class="topnav" aria-label="Main navigation">
+      <a class="nav-link active" href="{{ url_for('index') }}">Workspace</a>
+      <a class="nav-link" href="#workflow">How it works</a>
+      <a class="nav-link" href="#privacy">Privacy</a>
+    </nav>
+    <a class="status-pill" href="{{ url_for('health') }}"><span class="status-dot"></span> System ready</a>
+  </header>
+
+  <main class="page-wrap">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-spark">✦</span> YOUR DATA, WITHOUT THE MESS</div>
+        <h1>Make messy data<br><span class="gradient-text">beautifully useful.</span></h1>
+        <p class="hero-lede">A cleaner dataset is a clearer decision. Remove duplicates, fix missing values and prep your CSV for what comes next — in a few clicks.</p>
+        <div class="hero-points">
+          <span><span class="mini-check">✓</span> No spreadsheet gymnastics</span>
+          <span><span class="mini-check">✓</span> Download-ready results</span>
+        </div>
+      </div>
+      <div class="hero-art" aria-label="Illustration of a clean data table">
+        <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
+        <div class="data-float float-top"><span class="float-icon">↗</span><span><b>Data quality</b><small>On the right track</small></span><span class="float-score">+24%</span></div>
+        <div class="data-window">
+          <div class="window-bar"><span></span><span></span><span></span><i>dataset_preview.csv</i></div>
+          <div class="table-head"><span>NAME</span><span>VALUE</span><span>STATUS</span></div>
+          <div class="table-row"><span><i class="avatar av-one">A</i> Amelia</span><b>1,240</b><em class="tag tag-green">Clean</em></div>
+          <div class="table-row"><span><i class="avatar av-two">J</i> Jordan</span><b>980</b><em class="tag tag-green">Clean</em></div>
+          <div class="table-row muted-row"><span><i class="avatar av-three">S</i> Sam</span><b>—</b><em class="tag tag-amber">Fixed</em></div>
+          <div class="table-row"><span><i class="avatar av-four">M</i> Morgan</span><b>1,510</b><em class="tag tag-green">Clean</em></div>
+          <div class="window-footer"><span class="pulse-dot"></span> Data quality check complete <span class="footer-check">✓</span></div>
+        </div>
+        <div class="data-float float-bottom"><span class="clean-icon">✦</span><span><b>Cleaned & ready</b><small>Consistent. Structured. Yours.</small></span></div>
+      </div>
+    </section>
+
+    <section class="workspace-grid" id="workspace">
+      <div class="panel upload-panel">
+        <div class="panel-heading">
+          <div><div class="section-kicker">STEP 01 <span>·</span> UPLOAD</div><h2>Bring your data in</h2><p>Start with a CSV file. We'll take it from there.</p></div>
+          <span class="step-icon">↥</span>
+        </div>
+        <form id="clean-form" action="{{ url_for('clean') }}" method="post" enctype="multipart/form-data">
+          <label class="dropzone" id="dropzone" for="file">
+            <input id="file" name="file" type="file" accept=".csv,text/csv" required>
+            <span class="upload-symbol" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none"><path d="M24 31V8m0 0-8 8m8-8 8 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 28v9a3 3 0 0 0 3 3h22a3 3 0 0 0 3-3v-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </span>
+            <strong id="drop-title">Drop your CSV file here</strong>
+            <span class="drop-subtitle">or <span class="browse-link">browse files</span> on your computer</span>
+            <span class="file-limit">CSV format <i></i> Maximum file size: 16 MB</span>
+          </label>
+          <div class="file-selected" id="file-selected" hidden>
+            <span class="csv-icon">CSV</span><span class="file-meta"><strong id="file-name">dataset.csv</strong><small id="file-info">Ready to process</small></span>
+            <button type="button" class="icon-button" id="remove-file" aria-label="Remove selected file">×</button>
+          </div>
+          <div class="form-divider"><span>STEP 02</span><span class="divider-line"></span><span>CHOOSE YOUR CLEANUP</span></div>
+          <div class="field-block">
+            <label class="field-label" for="missing_action">Missing values <span class="field-hint">Choose a strategy</span></label>
+            <div class="select-wrap"><select id="missing_action" name="missing_action">
+              <option value="ffill">Smart fill — forward, then backward</option>
+              <option value="mean">Mean for numbers / mode for text</option>
+              <option value="drop">Remove rows with missing values</option>
+            </select><span class="select-chevron">⌄</span></div>
+            <p class="field-description" id="missing-description">Fills gaps using the nearest available value, helping preserve rows.</p>
+          </div>
+          <div class="option-card">
+            <label class="switch-label" for="remove_outliers"><span class="option-symbol purple">⌁</span><span class="option-copy"><strong>Remove statistical outliers</strong><small>Filter unusual numeric values using the 1.5× IQR rule.</small></span><span class="switch"><input type="checkbox" name="remove_outliers" id="remove_outliers"><span class="switch-track"></span></span></label>
+          </div>
+          <div class="field-block scale-field">
+            <label class="field-label" for="scaling">Scale numeric columns <span class="optional-pill">OPTIONAL</span></label>
+            <div class="select-wrap"><select id="scaling" name="scaling">
+              <option value="">Keep original scale</option>
+              <option value="minmax">Min-max — range from 0 to 1</option>
+              <option value="standard">Standard — z-score normalization</option>
+            </select><span class="select-chevron">⌄</span></div>
+          </div>
+          <div class="privacy-note"><span class="lock-symbol">♧</span><span><strong>Your data stays yours.</strong> Only upload files you're authorized to process. Temporary artifacts expire automatically.</span></div>
+          <button class="primary-button" type="submit" id="submit-button"><span class="button-spark">✦</span><span id="button-label">Clean my dataset</span><span class="button-arrow">→</span></button>
+          <p class="form-footnote">By continuing, you confirm you have permission to process this file.</p>
+        </form>
+      </div>
+
+      <aside class="side-column">
+        <div class="panel quality-panel">
+          <div class="side-title"><span class="side-icon blue">✧</span><div><h3>What gets better?</h3><p>Small fixes. Big clarity.</p></div></div>
+          <div class="benefit-row"><span class="benefit-icon teal">✓</span><span><strong>Duplicate-free rows</strong><small>Keep one copy of repeated records.</small></span></div>
+          <div class="benefit-row"><span class="benefit-icon violet">⌁</span><span><strong>Smarter missing values</strong><small>Choose how gaps are handled.</small></span></div>
+          <div class="benefit-row"><span class="benefit-icon orange">↗</span><span><strong>Cleaner numeric data</strong><small>Optionally remove outliers or scale.</small></span></div>
+          <div class="benefit-row"><span class="benefit-icon blue">▤</span><span><strong>Clear quality report</strong><small>See what changed after cleaning.</small></span></div>
+        </div>
+        <div class="panel limits-panel">
+          <div class="limits-top"><span class="limit-art">⌘</span><div><h3>Built for real datasets</h3><p>Useful guardrails, no guesswork.</p></div></div>
+          <div class="limit-metrics"><div><strong>16 <small>MB</small></strong><span>Max upload</span></div><div><strong>100k</strong><span>Max rows</span></div><div><strong>100</strong><span>Max columns</span></div></div>
+          <div class="limits-footer"><span class="shield-mini">✓</span> File checks run before processing.</div>
+        </div>
+        <div class="help-card" id="workflow"><span class="help-star">✦</span><div><strong>Three steps to a better dataset</strong><p>Upload your CSV, choose your cleaning rules, then download your cleaned file and report.</p></div></div>
+      </aside>
+    </section>
+
+    <section class="bottom-strip" id="privacy"><span class="bottom-shield">✓</span><span><strong>Designed with privacy in mind</strong><small>Unique output names, protected downloads, upload limits and automatic artifact cleanup.</small></span><span class="bottom-version">CLEAN DATA. CLEAR THINKING.</span></section>
+    <footer class="footer"><span>© CleanSweep · Your data, in better shape.</span><span><a href="#workspace">Back to workspace ↑</a></span></footer>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
