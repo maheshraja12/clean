@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
-:root{color-scheme:dark;--bg:#080e1c;--panel:#111a2d;--panel-soft:#131f35;--line:#26334b;--text:#f4f7ff;--muted:#9ba8c0;--muted-2:#6f7d98;--mint:#6cf0c2;--blue:#8e9dff;--violet:#b7a1ff;--radius:22px;font-family:'DM Sans',system-ui,sans-serif}
+:root{color-scheme:dark;--bg:#080e1c;--panel:#111a2d;--panel-soft:#131f35;--line:#26334b;--text:#f4f7ff;--muted:#9ba8c0;--muted-2:#6f7d98;--mint:#6cf0c2;--blue:#8e9dff;--violet:#b7a1ff;--radius:22px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 49% -10%,#1a2850 0,transparent 45%),var(--bg);color:var(--text);font-size:14px;line-height:1.5;overflow-x:hidden}
@@ -16,7 +16,7 @@ button,a,select,input{outline-color:#8f9bff}
 .brand-mark{display:grid;place-items:center;width:39px;height:39px;border-radius:13px;background:linear-gradient(140deg,#83f6cf,#7d8fff);color:#091322;box-shadow:0 6px 22px #6cf0c22b}
 .brand-mark svg{width:27px;height:27px}
 .brand-copy{display:flex;flex-direction:column;line-height:1.2;gap:4px}
-.brand-copy strong{font:800 17px Manrope,sans-serif;letter-spacing:-.6px}
+.brand-copy strong{font:800 17px system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:-.6px}
 .brand-copy small{font-size:9px;letter-spacing:2px;color:#8290ac;font-weight:700}
 .topnav{display:flex;align-items:center;gap:28px}
 .nav-link{font-size:12px;color:#9ba8c0;transition:color .2s}
@@ -32,7 +32,7 @@ button,a,select,input{outline-color:#8f9bff}
 .eyebrow{display:flex;align-items:center;gap:8px;color:#aeb9d3}
 .eyebrow-spark{color:var(--mint);font-size:15px}
 h1,h2,h3,p{margin-top:0}
-h1{font:800 clamp(35px,4vw,51px)/1.12 Manrope,sans-serif;letter-spacing:-2.2px;margin:18px 0 17px}
+h1{font:800 clamp(35px,4vw,51px)/1.12 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:-2.2px;margin:18px 0 17px}
 .gradient-text{background:linear-gradient(100deg,#72f2c6 4%,#8ea8ff 57%,#c0a2ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero-lede{font-size:14px;line-height:1.8;color:#9daac3;max-width:470px;margin-bottom:22px}
 .hero-points{display:flex;flex-wrap:wrap;gap:20px;color:#c4cde0;font-size:11px}
@@ -70,7 +70,7 @@ h1{font:800 clamp(35px,4vw,51px)/1.12 Manrope,sans-serif;letter-spacing:-2.2px;m
 .panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:22px}
 .section-kicker{font-size:9px;letter-spacing:1.5px;color:#8796b5}
 .section-kicker span{color:var(--mint);margin:0 3px}
-h2{font:750 22px/1.25 Manrope,sans-serif;letter-spacing:-.6px;margin:7px 0 6px}
+h2{font:750 22px/1.25 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:-.6px;margin:7px 0 6px}
 .panel-heading p,.panel-intro{font-size:12px;color:#93a0ba;margin:0;line-height:1.6}
 .step-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#6cf0c211;color:var(--mint);font-size:23px}
 .dropzone{display:flex;align-items:center;flex-direction:column;position:relative;text-align:center;padding:25px 16px 18px;border:1px dashed #4c6383;border-radius:15px;background:linear-gradient(130deg,#17263a99,#141c30a3);cursor:pointer;transition:border-color .2s,background .2s,transform .2s}
@@ -128,7 +128,7 @@ h2{font:750 22px/1.25 Manrope,sans-serif;letter-spacing:-.6px;margin:7px 0 6px}
 .side-title,.limits-top{display:flex;align-items:center;gap:11px;margin-bottom:20px}
 .side-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;font-size:21px}
 .blue{background:#91a1ff1b;color:#a4b2ff}
-.side-title h3,.limits-top h3{font:750 13px Manrope,sans-serif;margin:0 0 4px}
+.side-title h3,.limits-top h3{font:750 13px system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0 0 4px}
 .side-title p,.limits-top p{font-size:10px;color:#7f8da7;margin:0}
 .benefit-row{display:flex;align-items:center;gap:10px;margin-top:16px}
 .benefit-icon{display:grid;place-items:center;flex:0 0 31px;width:31px;height:31px;border-radius:10px;font-size:14px}
@@ -142,7 +142,7 @@ h2{font:750 22px/1.25 Manrope,sans-serif;letter-spacing:-.6px;margin:7px 0 6px}
 .limit-metrics>div{display:flex;flex-direction:column;gap:4px;padding-left:9px;border-right:1px solid #29364e}
 .limit-metrics>div:first-child{padding-left:0}
 .limit-metrics>div:last-child{border:0}
-.limit-metrics strong{font:800 17px Manrope,sans-serif;color:#eaf0ff;white-space:nowrap}
+.limit-metrics strong{font:800 17px system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#eaf0ff;white-space:nowrap}
 .limit-metrics strong small{font-size:10px;color:#95a4c0}
 .limit-metrics span{font-size:8px;color:#8795b0}
 .limits-footer{display:flex;align-items:center;gap:8px;padding:13px 0;color:#8291aa;font-size:9px}
